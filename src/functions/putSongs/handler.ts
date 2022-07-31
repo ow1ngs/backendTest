@@ -3,14 +3,15 @@ import type { ValidatedEventAPIGatewayProxyEvent } from "@libs/api-gateway";
 import { formatJSONResponse } from "@libs/api-gateway";
 import { middyfy } from "@libs/lambda";
 import { jwtValidation } from "src/util/jwtValidator";
-import { getSongsFromDB, putSongInDB } from "src/util/utils";
+import { putSongInDB } from "src/util/utils";
 import schema from "./schema";
 
 const putSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
   event
 ) => {
   let response: any;
-  const { songName, artist, year, album, visibility } = event.body;
+  const { id, songName, artist, year, visibility, album } = event.body;
+
   const { Authorization } = event.headers;
 
   try {
@@ -27,26 +28,21 @@ const putSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
       throw responseValidation.error;
     }
 
-    const specificSong: any = await getSpecificSong(
-      songName,
-      responseValidation.decodedToken.data
-    );
-    
-    if (response) {
-      throw validationMessages.SongDontExists;
-    }
-
     const song = {
-      id: specificSong[0].id,
-      songName: specificSong[0].songName,
+      songName,
       artist,
       year,
-      createdBy: specificSong[0].createdBy,
-      album,
       visibility,
-    };
+      album
+    }
 
-    response = await putSong(song);
+    Object.keys(song).forEach(key => {
+      if (song[key] === undefined) {
+        delete song[key];
+      }
+    });
+
+    response = await putSong(song, id);
 
     return formatJSONResponse({
       statusCode: 200,
@@ -67,18 +63,8 @@ const putSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
   }
 };
 
-export const getSpecificSong = async (songName: string, email: string) => {
-  const allSongs = await getSongsFromDB();
-  const specificSong = allSongs.filter(
-    (item: any) =>
-      item.songName.toLowerCase() === songName.toLowerCase() &&
-      item.createdBy === email
-  );
-  return specificSong;
-};
-
-export const putSong = async (song: any) => {
-  const response = await putSongInDB(song);
+export const putSong = async (song: any, id: string) => {
+  const response = await putSongInDB(song, id);
   return response;
 };
 
