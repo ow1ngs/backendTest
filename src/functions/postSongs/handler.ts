@@ -1,23 +1,36 @@
 import { validationMessages } from "@functions/constants";
+import { getSpecificSong } from "@functions/putSongs/handler";
 import type { ValidatedEventAPIGatewayProxyEvent } from "@libs/api-gateway";
 import { formatJSONResponse } from "@libs/api-gateway";
 import { middyfy } from "@libs/lambda";
 import { jwtValidation } from "src/util/jwtValidator";
 import { postSongInDB } from "src/util/utils";
-import { visibilityEnum } from "./constants";
 import schema from "./schema";
 
-const postSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (event) => {
+const postSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
+  event
+) => {
   let response: any;
-  const { token, artist, songName, year, album, visibility } = event.body;
-  
+  const { artist, songName, year, album, visibility } = event.body;
+  const { Authorization } = event.headers;
+
   try {
+    if (!Authorization) {
+      throw validationMessages.AuthorizationHeader;
+    }
+
     const responseValidation = await jwtValidation(
-      token,
+      Authorization,
       process.env.JWT_SECRET_KEY
     );
+
     if (!responseValidation.sucess) {
       throw responseValidation.error;
+    }
+
+    const songExists = await getSpecificSong(songName, responseValidation.decodedToken.data);
+    if (songExists[0]) { 
+      throw validationMessages.SongAlreadyExist;
     }
 
     const song = {
@@ -26,8 +39,8 @@ const postSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (even
       year,
       album,
       visibility,
-      createdBy: needCreator(visibility, responseValidation.decodedToken.data)
-    }
+      createdBy: responseValidation.decodedToken.data,
+    };
 
     response = await postSong(song);
 
@@ -47,15 +60,6 @@ const postSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (even
         error: error,
       },
     });
-  }
-};
-
-export const needCreator = (visibility: string, email: string) => {
-  if (visibility === visibilityEnum.PUBLIC) {
-    return null;
-  }
-  if (visibility === visibilityEnum.PRIVATE) {
-    return email;
   }
 };
 
