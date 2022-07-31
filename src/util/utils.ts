@@ -107,7 +107,7 @@ export const postSongInDB = async (song: any) => {
  * @param song - musicSchema: Song to create
  * @returns Response with the song metadata.
  */
- export const putSongInDB = async (song: any) => {
-  const response = await putSongs(db, song);
+ export const putSongInDB = async (song: any, id: string) => {
+  const response = await putSongs(db, song, id);
   return response
 }
