@@ -1,10 +1,9 @@
 import { validationMessages } from "@functions/constants";
-import { getSpecificSong } from "@functions/putSongs/handler";
 import type { ValidatedEventAPIGatewayProxyEvent } from "@libs/api-gateway";
 import { formatJSONResponse } from "@libs/api-gateway";
 import { middyfy } from "@libs/lambda";
 import { jwtValidation } from "src/util/jwtValidator";
-import { postSongInDB } from "src/util/utils";
+import { getSongsFromDB, postSongInDB } from "src/util/utils";
 import schema from "./schema";
 
 const postSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
@@ -66,6 +65,16 @@ const postSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
 export const postSong = async (song: any) => {
   const response = await postSongInDB(song);
   return response;
+};
+
+export const getSpecificSong = async (songName: string, email: string) => {
+  const allSongs = await getSongsFromDB();
+  const specificSong = allSongs.filter(
+    (item: any) =>
+      item.songName.toLowerCase() === songName.toLowerCase() &&
+      item.createdBy === email
+  );
+  return specificSong;
 };
 
 export const main = middyfy(postSongs);
