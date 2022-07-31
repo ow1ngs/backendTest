@@ -31,6 +31,10 @@ const getSongs: ValidatedEventAPIGatewayProxyEvent<any> = async (event) => {
       throw responseValidation.error;
     }
 
+    if (visibility !== visibilityEnum.PUBLIC && visibility !== visibilityEnum.PRIVATE && visibility !== visibilityEnum.MYSONGS) {
+      throw validationMessages.visibilityNotRecognized;
+    }
+
     if (visibility === visibilityEnum.PUBLIC) {
       response = await getPublicSongs(parseInt(page), parseInt(pageSize));
     }
