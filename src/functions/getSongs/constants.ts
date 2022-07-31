@@ -1,4 +1,5 @@
 export const visibilityEnum = {
     PUBLIC: 'public',
-    PRIVATE: 'private'
+    PRIVATE: 'private',
+    MYSONGS: 'mysongs'
 }

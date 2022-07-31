@@ -8,16 +8,25 @@ import { visibilityEnum } from "./constants";
 
 const getSongs: ValidatedEventAPIGatewayProxyEvent<any> = async (event) => {
   let response: any;
-  const { visibility, page, token, pageSize } = event.queryStringParameters;
-  if (!visibility || !page || !token || !pageSize) {
-    throw validationMessages.queryParams;
-  }
+
+  const { Authorization } = event.headers;
+
+  const { visibility, page, pageSize } = event.queryStringParameters;
 
   try {
+    if (!visibility || !page || !pageSize) {
+      throw validationMessages.queryParams;
+    }
+    
+    if (!Authorization) {
+      throw validationMessages.AuthorizationHeader;
+    }
+
     const responseValidation = await jwtValidation(
-      token,
+      Authorization,
       process.env.JWT_SECRET_KEY
     );
+
     if (!responseValidation.sucess) {
       throw responseValidation.error;
     }
@@ -28,6 +37,14 @@ const getSongs: ValidatedEventAPIGatewayProxyEvent<any> = async (event) => {
 
     if (visibility === visibilityEnum.PRIVATE) {
       response = await getPrivateSongs(
+        responseValidation.decodedToken.data,
+        parseInt(page),
+        parseInt(pageSize)
+      );
+    }
+
+    if (visibility === visibilityEnum.MYSONGS) {
+      response = await getAllMySongs(
         responseValidation.decodedToken.data,
         parseInt(page),
         parseInt(pageSize)
@@ -65,7 +82,7 @@ export const getPublicSongs = async (page: number, pageSize: number) => {
   const paginationMin =
     paginationMax === pageSize ? 0 : paginationMax - pageSize;
   const publicSongs = songs.filter(
-    (item) => item.visibility === visibilityEnum.PUBLIC
+    (item: any) => item.visibility === visibilityEnum.PUBLIC
   );
   return publicSongs.slice(paginationMin, paginationMax);
 };
@@ -87,9 +104,29 @@ export const getPrivateSongs = async (
   const paginationMin =
     paginationMax === pageSize ? 0 : paginationMax - pageSize;
   const privateSongs = songs.filter(
-    (item) =>
+    (item: any) =>
       item.visibility === visibilityEnum.PRIVATE && item.createdBy === email
   );
+  return privateSongs.slice(paginationMin, paginationMax);
+};
+
+/**
+ * This function filters and array of songs and return all the songs that were created by the logged user.
+ * @param email Email of the logged user.
+ * @param page Number of the page to return.
+ * @param pageSize Number of elements per page.
+ * @returns Array with the filtered data.
+ */
+export const getAllMySongs = async (
+  email: string,
+  page: number,
+  pageSize: number
+) => {
+  const songs = await getSongsFromDB();
+  const paginationMax = page * pageSize;
+  const paginationMin =
+    paginationMax === pageSize ? 0 : paginationMax - pageSize;
+  const privateSongs = songs.filter((item: any) => item.createdBy === email);
   return privateSongs.slice(paginationMin, paginationMax);
 };
 
