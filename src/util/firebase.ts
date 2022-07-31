@@ -1,5 +1,4 @@
-import { musicSchema } from "@functions/getSongs/schema";
-import { collection, getDocs, addDoc } from "firebase/firestore/lite";
+import { doc, collection, getDocs, addDoc, updateDoc } from "firebase/firestore/lite";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyAs15Ak-nQkBOQloSo6VUXrY9EpI_X3qRg",
@@ -21,7 +20,11 @@ export async function getUsers(db: any) {
 export async function getSongs(db: any) {
   const songsCols = collection(db, "songsCollection");
   const songsSnapshot = await getDocs(songsCols);
-  const songsList = songsSnapshot.docs.map((doc) => doc.data());
+  const songsList = songsSnapshot.docs.map((doc) => { 
+    const docs = doc.data();
+    const id = doc.id;
+    return { id, ...docs }
+  });
   return songsList;
 }
 
@@ -33,8 +36,21 @@ export async function postUser(db: any, email: string, password: string) {
   return response;
 }
 
-export async function postSongs(db: any, song: musicSchema) {
+export async function postSongs(db: any, song: any) {
   const response = await addDoc(collection(db, "songsCollection"), {
+    album: song.album,
+    artist: song.artist,
+    createdBy: song.createdBy,
+    songName: song.songName,
+    visibility: song.visibility,
+    year: song.year
+  });
+  return response;
+}
+
+export async function putSongs(db: any, song: any) {
+  console.log(song);
+  const response = await updateDoc(doc(db, "songsCollection", song.id), {
     album: song.album,
     artist: song.artist,
     createdBy: song.createdBy,

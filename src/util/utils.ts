@@ -1,8 +1,7 @@
 import * as jwt from "jsonwebtoken";
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore/lite";
-import { firebaseConfig, getSongs, getUsers, postSongs, postUser } from "./firebase";
-import { musicSchema } from "@functions/getSongs/schema";
+import { firebaseConfig, getSongs, getUsers, postSongs, postUser, putSongs } from "./firebase";
 
 let app = initializeApp(firebaseConfig);
 let db = getFirestore(app);
@@ -96,9 +95,19 @@ export const getSongsFromDB = async () => {
 /**
  * Creates a new object in the song collection in the firebase database.
  * @param song - musicSchema: Song to create
- * @returns 
+ * @returns Response with the song metadata.
  */
-export const postSongInDB = async (song: musicSchema) => {
+export const postSongInDB = async (song: any) => {
   const response = await postSongs(db, song);
+  return response
+}
+
+/**
+ * Creates a new object in the song collection in the firebase database.
+ * @param song - musicSchema: Song to create
+ * @returns Response with the song metadata.
+ */
+ export const putSongInDB = async (song: any) => {
+  const response = await putSongs(db, song);
   return response
 }
