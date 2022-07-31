@@ -1,3 +1,4 @@
+import { validationMessages } from "@functions/constants";
 import * as jwt from "jsonwebtoken";
 
 export const jwtValidation = async (jwtToken: string, secretKey: string) => {
@@ -10,7 +11,7 @@ export const jwtValidation = async (jwtToken: string, secretKey: string) => {
   } catch (error) {
     return {
       success: false,
-      error: "The incoming token has expired or is invalid.",
+      error: validationMessages.invalidToken,
     };
   }
 };
