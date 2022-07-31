@@ -48,15 +48,8 @@ export async function postSongs(db: any, song: any) {
   return response;
 }
 
-export async function putSongs(db: any, song: any) {
-  console.log(song);
-  const response = await updateDoc(doc(db, "songsCollection", song.id), {
-    album: song.album,
-    artist: song.artist,
-    createdBy: song.createdBy,
-    songName: song.songName,
-    visibility: song.visibility,
-    year: song.year
-  });
+export async function putSongs(db: any, song: any, id: string) {
+  
+  const response = await updateDoc(doc(db, "songsCollection", id), song);
   return response;
 }
