@@ -32,7 +32,6 @@ const userAuth: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
       throw validationMessages.userCredentialsNotVerified
     }
     const validateCredentials = await validateUserCredentials(email, password);
-    console.log(validateCredentials)
     if (!validateCredentials) {
       throw validationMessages.userCredentialsNotVerified
     }
