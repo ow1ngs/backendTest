@@ -1,4 +1,4 @@
-import { doc, collection, getDocs, addDoc, updateDoc } from "firebase/firestore/lite";
+import { doc, collection, getDocs, addDoc, updateDoc, getDoc } from "firebase/firestore/lite";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyAs15Ak-nQkBOQloSo6VUXrY9EpI_X3qRg",
@@ -28,6 +28,12 @@ export async function getSongs(db: any) {
   return songsList;
 }
 
+export async function getSongById(db: any, id: string) {
+  const docRef = doc(db, "songsCollection", id);
+  const docSnap = await getDoc(docRef);
+  return docSnap.data();
+}
+
 export async function postUser(db: any, email: string, password: string) {
   const response = await addDoc(collection(db, "userCollection"), {
     email: email,
@@ -47,6 +53,7 @@ export async function postSongs(db: any, song: any) {
   });
   return response;
 }
+
 
 export async function putSongs(db: any, song: any, id: string) {
   

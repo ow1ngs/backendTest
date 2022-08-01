@@ -1,7 +1,7 @@
 import * as jwt from "jsonwebtoken";
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore/lite";
-import { firebaseConfig, getSongs, getUsers, postSongs, postUser, putSongs } from "./firebase";
+import { firebaseConfig, getSongById, getSongs, getUsers, postSongs, postUser, putSongs } from "./firebase";
 
 let app = initializeApp(firebaseConfig);
 let db = getFirestore(app);
@@ -110,4 +110,14 @@ export const postSongInDB = async (song: any) => {
  export const putSongInDB = async (song: any, id: string) => {
   const response = await putSongs(db, song, id);
   return response
+}
+
+/**
+ * Retrieves a specific song from the DB.
+ * @param id - string: Id of the firebase song.
+ * @return Array with the song or undefined if does not exist.
+ */
+export const getSongByIdFromDB = async (id: string) => {
+  const response = await getSongById(db, id);
+  return response;
 }

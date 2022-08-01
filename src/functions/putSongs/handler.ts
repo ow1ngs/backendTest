@@ -3,7 +3,7 @@ import type { ValidatedEventAPIGatewayProxyEvent } from "@libs/api-gateway";
 import { formatJSONResponse } from "@libs/api-gateway";
 import { middyfy } from "@libs/lambda";
 import { jwtValidation } from "src/util/jwtValidator";
-import { putSongInDB } from "src/util/utils";
+import { getSongByIdFromDB, putSongInDB } from "src/util/utils";
 import schema from "./schema";
 
 const putSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
@@ -28,15 +28,25 @@ const putSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
       throw responseValidation.error;
     }
 
+    const specificSong = await validateCreatorOfSong(id);
+
+    if (!specificSong) {
+      throw validationMessages.DocumentDontExist;
+    }
+
+    if (specificSong.createdBy !== responseValidation.decodedToken.data) {
+      throw validationMessages.SongDontCreatedByUser;
+    }
+
     const song = {
       songName,
       artist,
       year,
       visibility,
-      album
-    }
+      album,
+    };
 
-    Object.keys(song).forEach(key => {
+    Object.keys(song).forEach((key) => {
       if (song[key] === undefined) {
         delete song[key];
       }
@@ -61,6 +71,11 @@ const putSongs: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (
       },
     });
   }
+};
+
+export const validateCreatorOfSong = async (id: string) => {
+ const response = await getSongByIdFromDB(id);
+ return response;
 };
 
 export const putSong = async (song: any, id: string) => {
